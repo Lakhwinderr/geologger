@@ -39,7 +39,7 @@
             attribution: '&copy; <a href="http://www.openstreetmap.org/copyright">OpenStreetMap</a>'
         }).addTo(map);
         // 3. Fetch data from our Node.js backend and add markers
-        fetch('http://localhost:3000/api/sites')
+        fetch('https://geologger-backend.onrender.com/api/sites')
             .then(res => res.json())
             .then(data => {
                 const siteList = document.getElementById('site-list');
