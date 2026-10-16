@@ -1,0 +1,33 @@
+body {
+    margin: 0;
+    padding: 0;
+    display: flex;
+    font-family: sans-serif;
+}
+
+#sidebar {
+    width: 300px;
+    height: 100vh;
+    background: #1e1e1e;
+    color: #fff;
+    padding: 20px;
+    box-sizing: border-box;
+    overflow-y: auto;
+}
+
+#map {
+    flex-grow: 1;
+    height: 100vh;
+}
+
+.site-card {
+    background: #2d2d2d;
+    padding: 10px;
+    margin-bottom: 10px;
+    border-radius: 6px;
+    cursor: pointer;
+}
+
+.site-card:hover {
+    background: #3d3d3d;
+}

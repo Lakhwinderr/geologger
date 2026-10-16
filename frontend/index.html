@@ -1,0 +1,104 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <title>GeoLogger Dashboard</title>
+    <!-- Leaflet CSS -->
+    <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" />
+    <link rel="stylesheet" href="./styles.css">
+</head>
+
+<body>
+    <div id="sidebar">
+        <h2>GeoLogger</h2>
+        <p>Active Geological Sites</p>
+        <!-- Filter Dropdown -->
+        <label for="filter-select"><small>Filter by Rock Type:</small></label>
+        <select id="filter-select"
+            style="width: 100%; margin-top:5px; padding: 8px; margin-bottom: 15px; background: #2d2d2d; color: #fff; border: 1px solid #444; border-radius: 4px;">
+            <option value="ALL">All Rocks</option>
+            <option value="Quartzite">Quartzite</option>
+            <option value="Schist">Schist & Gneiss</option>
+            <option value="Basalt">Basalt</option>
+        </select>
+        <div id="site-list"></div>
+    </div>
+    <div id="map"></div>
+
+    <!-- Leaflet JS -->
+    <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
+    <script>
+        // 1. Initialize map centered on India
+        const map = L.map('map').setView([28.6139, 77.2090], 5);
+
+        // 2. Add OpenStreetMap background tiles
+        // Note: Don't forget to add a tile layer next, otherwise the map will just be gray!
+        L.tileLayer('https://tile.openstreetmap.org/{z}/{x}/{y}.png', {
+            maxZoom: 19,
+            attribution: '&copy; <a href="http://www.openstreetmap.org/copyright">OpenStreetMap</a>'
+        }).addTo(map);
+        // 3. Fetch data from our Node.js backend and add markers
+        fetch('http://localhost:3000/api/sites')
+            .then(res => res.json())
+            .then(data => {
+                const siteList = document.getElementById('site-list');
+                const filterSelect = document.getElementById('filter-select');
+                let markers = [];
+
+                function renderSites(selectedType) {
+                    // clean any previous marker and clean the siteList in leftPanel, also we have reinitialize the markers
+                    siteList.innerHTML = '';
+                    markers.forEach(m => map.removeLayer(m));
+                    markers = [];
+                    data.features.forEach(site => {
+                        const coords = site.geometry.coordinates;
+                        const props = site.properties;
+
+                        const [longitude, latitude] = [...coords];
+
+                        const popUpText =
+                            `<b>${props.siteName}</b>
+                        <br>
+                        Rock: ${props.rockType}
+                        `;
+                        // Leaflet uses [latitude, longitude], GeoJSON uses [longitude, latitude]
+
+                        // check if it matches the filter
+                        if (selectedType !== 'ALL' && !props.rockType.includes(selectedType)) {
+                            return;
+                        }
+                        // if the selectedType mathches, drop the marker
+                        const marker = L.marker([latitude, longitude]).addTo(map).bindPopup(popUpText);
+                        markers.push(marker);
+
+                        // 2. Create sidebar card
+                        const card = document.createElement('div');
+                        card.className = 'site-card';
+                        card.innerHTML = `<strong>${props.siteName}</strong><br><small>${props.rockType}</small>`;
+
+                        // 3. Make sidebar card fly to marker on click!
+                        card.onclick = () => {
+                            map.flyTo([latitude, longitude], 10);
+                            marker.openPopup();
+                        };
+
+                        siteList.appendChild(card);
+
+                    });
+                }
+
+                // initially render all the sites
+                renderSites('ALL');
+
+                // event listener for the dropdown changes
+                filterSelect.onchange = (e) => {
+                    renderSites(e.target.value);
+                }
+
+            })
+            .catch(err => console.log('Error fetching site data:', err));
+    </script>
+</body>
+
+</html>
